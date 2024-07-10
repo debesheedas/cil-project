@@ -1,0 +1,8 @@
+{
+    "bert_model_name": "vinai/bertweet-base",
+    "batch_size": 32,
+    "output_dir": "/home/debdas/cil/cil-project/output",
+    "learning_rate": 2e-5,
+    "epochs": 3,
+    "weight_decay": 0.01
+}
