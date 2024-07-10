@@ -4,5 +4,8 @@
     "output_dir": "/home/debdas/cil/cil-project/output",
     "learning_rate": 2e-5,
     "epochs": 3,
-    "weight_decay": 0.01
+    "weight_decay": 0.01,
+    "neg_training_path": "/home/debdas/cil/cil-project/data/train_neg.txt",
+    "pos_training_path": "/home/debdas/cil/cil-project/data/train_pos.txt",
+    "test_path": "/home/debdas/cil/cil-project/data/test_data.txt"
 }
