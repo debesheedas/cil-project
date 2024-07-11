@@ -1,7 +1,6 @@
 import json
 import logging
 from loguru import logger
-from tqdm import tqdm
 
 from transformers import AutoModel, AutoTokenizer
 import torch.nn as nn

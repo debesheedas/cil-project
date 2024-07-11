@@ -22,6 +22,7 @@ def setup_environment(config_path):
     dataset, test_dataset = read_datasets(config)
     tokenizer = AutoTokenizer.from_pretrained(bert_model_name)
     logger.info("Tokenizer created")
+    return config, bert_model_name, device, dataset, test_dataset, tokenizer
 
 def tokenize_data(example):
     return tokenizer(example['text'], truncation=True)

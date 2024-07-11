@@ -1,14 +1,16 @@
 import pandas as pd
 import numpy as np
 import os
+import json
 # Takes two or more prediction files (probability of positive class) and produces an ensembled final prediction
 
-# Path to the directory where you want the final prediction file to be saved
-output_path = '/home/debdas/cil/cil-project/output'
+# Load configuration from config.json
+config_path = 'config.json'
+with open(config_path, 'r') as file:
+    config = json.load(file)
 
-# List of paths to the files containing the prediction probabilities for the test set
-prediction_paths = ['/home/debdas/cil/cil-project/output/probabilities_0.csv', '/home/debdas/cil/cil-project/output/probabilities_1.csv']
-
+output_path = config['output_dir']
+prediction_paths = config['prediction_paths']
 
 data = []
 # Weights are by default initialized to give equal weightage to each prediction set. Can be modified below
