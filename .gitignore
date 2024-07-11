@@ -3,3 +3,4 @@
 /data_small
 *.pyc
 *__pycache__
+src/config.json
