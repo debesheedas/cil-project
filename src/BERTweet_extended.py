@@ -8,9 +8,6 @@ from BERTweet import *
 
 NUM_CLASSES = 2
 
-config_path = './config.json'
-config, bert_model_name, device, dataset, test_dataset, tokenizer = setup_environment(config_path)
-
 def init_weights(module):
     if type(module) in (nn.Linear, nn.Conv1d):
         nn.init.xavier_uniform_(module.weight)
@@ -39,14 +36,24 @@ class BERT_CNN_LSTM(nn.Module):
         logits = self.classifier(final_output)
         return logits
 
-# Example of how to instantiate the model
+def load_checkpoint(model, checkpoint_path):
+    checkpoint = torch.load(checkpoint_path, map_location=device)
+    model.load_state_dict(checkpoint['model_state_dict'])
+    return model
+
+config_path = './config.json'
+config, bert_model_name, device, dataset, test_dataset, tokenizer = setup_environment(config_path)
+
 model = BERT_CNN_LSTM()
 
-dataset = dataset.map(tokenize_data, batched=True)
-test_dataset = test_dataset.map(tokenize_data, batched=True)
+#replace model with checkpoint model if checkpoint is provided and asked for
+checkpoint_path = config["checkpoint_path"] 
+if config["load_checkpoint"] and  os.path.exists(checkpoint_path):
+    model = load_checkpoint(model, checkpoint_path).to(device)
+    logger.info(f'Model loaded from checkpoint: {checkpoint_path}')
+    
 
-dataset = dataset.train_test_split(test_size=0.2, seed=42)
-data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
+dataset, test_dataset, data_collator = prepare_datasets(dataset, test_dataset)
 
 train_and_predict(model, dataset, test_dataset, data_collator)
 
