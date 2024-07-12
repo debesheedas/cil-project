@@ -1,11 +1,11 @@
 {
     "bert_model_name": "vinai/bertweet-base",
     "batch_size": 32,
-    "output_dir": "/home/debdas/cil/cil-project/output",
+    "output_dir": "/home/pgoyal/cil-project/output",
     "learning_rate": 2e-5,
-    "epochs": 3,
+    "epochs": 1,
     "weight_decay": 0.01,
-    "neg_training_path": "/home/debdas/cil/cil-project/data/train_neg.txt",
-    "pos_training_path": "/home/debdas/cil/cil-project/data/train_pos.txt",
-    "test_path": "/home/debdas/cil/cil-project/data/test_data.txt"
+    "neg_training_path": "/home/pgoyal/cil-project/data/train_neg.txt",
+    "pos_training_path": "/home/pgoyal/cil-project/data/train_pos.txt",
+    "test_path": "/home/pgoyal/cil-project/data/test_data.txt"
 }
