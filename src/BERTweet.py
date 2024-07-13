@@ -29,7 +29,7 @@ def tokenize_data(example):
 def prepare_datasets(dataset, test_dataset):
     dataset = dataset.map(tokenize_data, batched=True)
     test_dataset = test_dataset.map(tokenize_data, batched=True)
-    dataset = dataset.train_test_split(test_size=0.2, seed=42)
+    dataset = dataset.train_test_split(test_size=0.05, seed=42)
     data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
     return dataset, test_dataset, data_collator
 
@@ -67,7 +67,7 @@ def train_and_predict(model, dataset, test_dataset, data_collator):
     logger.info('Ended training')
 
     results = trainer.predict(test_dataset)
-    #logits = softmax(results.predictions, axis=1)
+    logits = softmax(results.predictions, axis=1)
     probabilities = softmax(results.predictions, axis=1)[:,1]
     df = pd.DataFrame(probabilities, columns=["Prediction"])
     df.index.name = "Id"
