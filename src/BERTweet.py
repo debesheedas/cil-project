@@ -4,7 +4,6 @@ import numpy as np
 import pandas as pd
 from transformers import AutoTokenizer, DataCollatorWithPadding, AutoModelForSequenceClassification, TrainingArguments, Trainer
 
-import logging
 from loguru import logger
 from tqdm import tqdm
 import torch
@@ -27,22 +26,12 @@ def setup_environment(config_path):
 def tokenize_data(example):
     return tokenizer(example['text'], truncation=True)
 
-
-config_path = './config.json'
-config, bert_model_name, device, dataset, test_dataset, tokenizer = setup_environment(config_path)
-
-dataset = dataset.map(tokenize_data, batched=True)
-test_dataset = test_dataset.map(tokenize_data, batched=True)
-# print(dataset)
-# print(dataset[0:5])
-
-dataset = dataset.train_test_split(test_size=0.2, seed=42)
-# print(dataset['train'])
-# print(dataset['test'])
-#---------------------------------
-data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
-model = AutoModelForSequenceClassification.from_pretrained(bert_model_name, num_labels=2).to(device)
-# print(model, device)
+def prepare_datasets(dataset, test_dataset):
+    dataset = dataset.map(tokenize_data, batched=True)
+    test_dataset = test_dataset.map(tokenize_data, batched=True)
+    dataset = dataset.train_test_split(test_size=0.05, seed=42)
+    data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
+    return dataset, test_dataset, data_collator
 
 def train_and_predict(model, dataset, test_dataset, data_collator):
     logging_steps = len(dataset['train']) // config["batch_size"]
@@ -55,7 +44,7 @@ def train_and_predict(model, dataset, test_dataset, data_collator):
         per_device_eval_batch_size=config["batch_size"],
         num_train_epochs=config["epochs"],
         weight_decay=config["weight_decay"],
-        evaluation_strategy="epoch",
+        eval_strategy="epoch",
         disable_tqdm=False,
         logging_steps=logging_steps,
         logging_strategy="steps",
@@ -78,11 +67,8 @@ def train_and_predict(model, dataset, test_dataset, data_collator):
     logger.info('Ended training')
 
     results = trainer.predict(test_dataset)
-    # print(results.predictions)
     logits = softmax(results.predictions, axis=1)
-    # print(logits)
     probabilities = softmax(results.predictions, axis=1)[:,1]
-    # print(probabilities)
     df = pd.DataFrame(probabilities, columns=["Prediction"])
     df.index.name = "Id"
     df.index += 1
@@ -96,8 +82,21 @@ def train_and_predict(model, dataset, test_dataset, data_collator):
     df = pd.DataFrame(y_preds, columns=["Prediction"])
     df.index.name = "Id"
     df.index += 1
-    # df.to_csv("../output/final_predictions.csv")
     df.to_csv(os.path.join(config["output_dir"], "final_predictions.csv"))
+
+
+config_path = './config.json'
+config, bert_model_name, device, dataset, test_dataset, tokenizer = setup_environment(config_path)
+
+dataset, test_dataset, data_collator = prepare_datasets(dataset, test_dataset)
+
+model = AutoModelForSequenceClassification.from_pretrained(bert_model_name, num_labels=2).to(device)
+
+#replace model with checkpoint model if checkpoint is provided and asked for
+checkpoint_path = config["checkpoint_path"] 
+if config["load_checkpoint"] and os.path.exists(checkpoint_path):
+    model = AutoModelForSequenceClassification.from_pretrained(checkpoint_path).to(device)
+    logger.info(f'Model loaded from checkpoint: {checkpoint_path}')
 
 train_and_predict(model, dataset, test_dataset, data_collator)
 exit(0)

@@ -1,1 +1,1 @@
-srun -A csnlp --time=01:00:00 --gpus=1 --pty bash
+srun -A cil --time=04:00:00 --gpus=1 --pty bash

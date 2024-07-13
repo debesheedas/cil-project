@@ -1,11 +1,18 @@
 {
     "bert_model_name": "vinai/bertweet-base",
-    "batch_size": 32,
-    "output_dir": "/home/pgoyal/cil-project/output",
+    "checkpoint_path": "",
+    "load_checkpoint": 0,
+    "batch_size": 64,
+    "output_dir": "/home/laschulz/cil-project/output",
     "learning_rate": 2e-5,
     "epochs": 1,
     "weight_decay": 0.01,
-    "neg_training_path": "/home/pgoyal/cil-project/data/train_neg.txt",
-    "pos_training_path": "/home/pgoyal/cil-project/data/train_pos.txt",
-    "test_path": "/home/pgoyal/cil-project/data/test_data.txt"
+    "neg_training_path": "/home/laschulz/cil-project/data/train_neg_full.txt",
+    "pos_training_path": "/home/laschulz/cil-project/data/train_pos_full.txt",
+    "test_path": "/home/laschulz/cil-project/data/test_data.txt",
+    "prediction_paths": [
+    "/home/laschulz/cil-project/output/probabilities_0.csv",
+    "/home/laschulz/cil-project/output/probabilities_1.csv"
+]
 }
+
