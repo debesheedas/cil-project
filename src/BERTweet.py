@@ -68,7 +68,7 @@ def train_and_predict(model, dataset, test_dataset, data_collator):
     logger.info('Ended training')
 
     results = trainer.predict(test_dataset)
-    #logits = softmax(results.predictions, axis=1)
+    logits = softmax(results.predictions, axis=1)
     probabilities = softmax(results.predictions, axis=1)[:,1]
     df = pd.DataFrame(probabilities, columns=["Prediction"])
     df.index.name = "Id"
