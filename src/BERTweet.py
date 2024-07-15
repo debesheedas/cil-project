@@ -16,14 +16,15 @@ def setup_environment(config_path):
     # print(bert_model_name)
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     logger.info(f'Using device {device}')
+    print(torch.version.cuda)
 
     dataset, test_dataset = read_datasets(config)
     tokenizer = AutoTokenizer.from_pretrained(bert_model_name)
-    logger.info("Tokenizer created")
+    logger.info(f"Tokenizer created: {tokenizer.vocab_size}" )
     return config, bert_model_name, device, dataset, test_dataset, tokenizer
 
 def tokenize_data(example):
-    return tokenizer(example['text'], truncation=True,  max_length=100)
+    return tokenizer(example['text'], truncation=True, max_length=100)
 
 def prepare_datasets(dataset, test_dataset):
     dataset = dataset.map(tokenize_data, batched=True)
@@ -92,12 +93,11 @@ dataset, test_dataset, data_collator = prepare_datasets(dataset, test_dataset)
 model = AutoModelForSequenceClassification.from_pretrained(bert_model_name, num_labels=2).to(device)
 
 #replace model with checkpoint model if checkpoint is provided and asked for
-""""
 checkpoint_path = config["checkpoint_path"] 
 if config["load_checkpoint"] and os.path.exists(checkpoint_path):
     model = AutoModelForSequenceClassification.from_pretrained(checkpoint_path).to(device)
     logger.info(f'Model loaded from checkpoint: {checkpoint_path}')
-"""
+
 train_and_predict(model, dataset, test_dataset, data_collator)
 exit(0)
 
