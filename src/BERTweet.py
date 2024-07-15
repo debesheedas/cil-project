@@ -5,7 +5,6 @@ import pandas as pd
 from transformers import AutoTokenizer, DataCollatorWithPadding, AutoModelForSequenceClassification, TrainingArguments, Trainer
 
 from loguru import logger
-from tqdm import tqdm
 import torch
 from utils import compute_metrics, read_datasets
 from scipy.special import softmax
@@ -24,12 +23,12 @@ def setup_environment(config_path):
     return config, bert_model_name, device, dataset, test_dataset, tokenizer
 
 def tokenize_data(example):
-    return tokenizer(example['text'], truncation=True)
+    return tokenizer(example['text'], truncation=True,  max_length=100)
 
 def prepare_datasets(dataset, test_dataset):
     dataset = dataset.map(tokenize_data, batched=True)
     test_dataset = test_dataset.map(tokenize_data, batched=True)
-    dataset = dataset.train_test_split(test_size=0.05, seed=42)
+    dataset = dataset.train_test_split(test_size=0.1, seed=42)
     data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
     return dataset, test_dataset, data_collator
 
@@ -93,11 +92,12 @@ dataset, test_dataset, data_collator = prepare_datasets(dataset, test_dataset)
 model = AutoModelForSequenceClassification.from_pretrained(bert_model_name, num_labels=2).to(device)
 
 #replace model with checkpoint model if checkpoint is provided and asked for
+""""
 checkpoint_path = config["checkpoint_path"] 
 if config["load_checkpoint"] and os.path.exists(checkpoint_path):
     model = AutoModelForSequenceClassification.from_pretrained(checkpoint_path).to(device)
     logger.info(f'Model loaded from checkpoint: {checkpoint_path}')
-
+"""
 train_and_predict(model, dataset, test_dataset, data_collator)
 exit(0)
 
