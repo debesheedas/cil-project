@@ -25,7 +25,7 @@ def setup_environment(config_path):
     return config, bert_model_name, device, dataset, test_dataset, tokenizer
 
 def tokenize_data(example):
-    return tokenizer(example['text'], truncation=True, max_length=42)
+    return tokenizer(example['text'], truncation=True, max_length=52)
 
 def prepare_datasets(dataset, test_dataset):
     dataset = dataset.map(tokenize_data, batched=True)
