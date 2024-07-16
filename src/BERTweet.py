@@ -5,7 +5,6 @@ import pandas as pd
 from transformers import AutoTokenizer, DataCollatorWithPadding, AutoModelForSequenceClassification, TrainingArguments, Trainer
 
 from loguru import logger
-from tqdm import tqdm
 import torch
 from utils import compute_metrics, read_datasets
 from scipy.special import softmax
@@ -94,9 +93,8 @@ dataset, test_dataset, data_collator = prepare_datasets(dataset, test_dataset)
 model = AutoModelForSequenceClassification.from_pretrained(bert_model_name, num_labels=2).to(device)
 
 #replace model with checkpoint model if checkpoint is provided and asked for
- 
-if config["load_checkpoint"] and os.path.exists(config["checkpoint_path"]):
-    checkpoint_path = config["checkpoint_path"]
+checkpoint_path = config["checkpoint_path"] 
+if config["load_checkpoint"] and os.path.exists(checkpoint_path):
     model = AutoModelForSequenceClassification.from_pretrained(checkpoint_path).to(device)
     logger.info(f'Model loaded from checkpoint: {checkpoint_path}')
 
