@@ -37,7 +37,7 @@ def train_and_predict(model, dataset, test_dataset, data_collator):
     logging_steps = len(dataset['train']) // config["batch_size"]
     print(logging_steps)
 
-    early_stop = EarlyStoppingCallback(early_stopping_patience=1)
+    early_stop = EarlyStoppingCallback(early_stopping_patience=3, early_stopping_threshold=0.001)
 
     training_args = TrainingArguments(
         output_dir=config["output_dir"],
@@ -53,10 +53,11 @@ def train_and_predict(model, dataset, test_dataset, data_collator):
         save_strategy="steps",
         warmup_ratio=0.1,
         metric_for_best_model="eval_accuracy",
-        eval_steps= logging_steps//config["eval_freq"],  #Set eval_freq to 1 if you want validation scores only once at the end of epoch (checkpoints occur every time validation occurs)
-        save_steps= logging_steps//config["eval_freq"],
-        load_best_model_at_end = True
+        eval_steps=logging_steps // config["eval_freq"],
+        save_steps=logging_steps // config["eval_freq"],
+        load_best_model_at_end=True
     )
+
 
     trainer = Trainer(
         model=model,
