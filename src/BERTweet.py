@@ -2,7 +2,7 @@ import json
 import os
 import numpy as np
 import pandas as pd
-from transformers import AutoTokenizer, DataCollatorWithPadding, AutoModelForSequenceClassification, TrainingArguments, Trainer
+from transformers import AutoTokenizer, DataCollatorWithPadding, AutoModelForSequenceClassification, TrainingArguments, Trainer, EarlyStoppingCallback
 
 from loguru import logger
 import torch
@@ -37,6 +37,8 @@ def train_and_predict(model, dataset, test_dataset, data_collator):
     logging_steps = len(dataset['train']) // config["batch_size"]
     print(logging_steps)
 
+    early_stop = EarlyStoppingCallback(early_stopping_patience=1)
+
     training_args = TrainingArguments(
         output_dir=config["output_dir"],
         learning_rate=config["learning_rate"],
@@ -44,12 +46,16 @@ def train_and_predict(model, dataset, test_dataset, data_collator):
         per_device_eval_batch_size=config["batch_size"],
         num_train_epochs=config["epochs"],
         weight_decay=config["weight_decay"],
-        eval_strategy="epoch",
+        eval_strategy="steps",
         disable_tqdm=False,
         logging_steps=logging_steps,
         logging_strategy="steps",
-        save_strategy="epoch",
-        warmup_ratio=0.1
+        save_strategy="steps",
+        warmup_ratio=0.1,
+        metric_for_best_model="eval_accuracy",
+        eval_steps= logging_steps/config["eval_freq"],  #Set eval_freq to 1 if you want validation scores only once at the end of epoch (checkpoints occur every time validation occurs)
+        save_steps= logging_steps/config["eval_freq"],
+        load_best_model_at_end = True
     )
 
     trainer = Trainer(
@@ -59,7 +65,8 @@ def train_and_predict(model, dataset, test_dataset, data_collator):
         eval_dataset=dataset["test"],
         tokenizer=tokenizer,
         data_collator=data_collator,
-        compute_metrics=compute_metrics
+        compute_metrics=compute_metrics,
+        callbacks=[early_stop]
     )
 
     logger.info('Started training')
