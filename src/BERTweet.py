@@ -53,8 +53,8 @@ def train_and_predict(model, dataset, test_dataset, data_collator):
         save_strategy="steps",
         warmup_ratio=0.1,
         metric_for_best_model="eval_accuracy",
-        eval_steps= logging_steps/config["eval_freq"],  #Set eval_freq to 1 if you want validation scores only once at the end of epoch (checkpoints occur every time validation occurs)
-        save_steps= logging_steps/config["eval_freq"],
+        eval_steps= logging_steps//config["eval_freq"],  #Set eval_freq to 1 if you want validation scores only once at the end of epoch (checkpoints occur every time validation occurs)
+        save_steps= logging_steps//config["eval_freq"],
         load_best_model_at_end = True
     )
 
