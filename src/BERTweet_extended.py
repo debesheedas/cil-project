@@ -38,10 +38,7 @@ class BERT_2DCNN_LSTM(nn.Module):
         self.bert = AutoModel.from_pretrained(bert_model_name).to(device)
         self.cnn = nn.Conv2d(in_channels=1, out_channels=cnn_out_channels, kernel_size=(3, self.bert.config.hidden_size), padding=(1, 0))
         self.lstm = nn.LSTM(input_size=cnn_out_channels, hidden_size=lstm_hidden_size, batch_first=True, dropout = 0.2)
-        #self.dropout = nn.Dropout(p=0.3)
-        self.attention = Attention(lstm_hidden_size * 2)
-        #self.layer_norm = nn.LayerNorm(lstm_hidden_size * 2)
-        self.classifier = nn.Linear(lstm_hidden_size * 2, NUM_CLASSES)
+        self.classifier = nn.Linear(lstm_hidden_size, NUM_CLASSES)
         self.apply(init_weights)
 
     def forward(self, input_ids, attention_mask):
@@ -51,15 +48,34 @@ class BERT_2DCNN_LSTM(nn.Module):
         cnn_output = self.cnn(bert_output).squeeze(3)  
         cnn_output = cnn_output.permute(0, 2, 1)  # Reshape to (batch_size, sequence_length, cnn_out_channels)
         lstm_output, _ = self.lstm(cnn_output)
-        #final_output = self.dropout(lstm_output)
         attention_output = self.attention(lstm_output)
-        #final_output = self.layer_norm(dropout_output)
+        logits = self.classifier(attention_output)
+        return logits
+    
+class BERT_2DCNN_LSTM_Attn(nn.Module):
+    def __init__(self, bert_model_name=bert_model_name, cnn_out_channels=100, lstm_hidden_size=256):    
+        super(BERT_2DCNN_LSTM_Attn, self).__init__()
+        self.bert = AutoModel.from_pretrained(bert_model_name).to(device)
+        self.cnn = nn.Conv2d(in_channels=1, out_channels=cnn_out_channels, kernel_size=(3, self.bert.config.hidden_size), padding=(1, 0))
+        self.lstm = nn.LSTM(input_size=cnn_out_channels, hidden_size=lstm_hidden_size, batch_first=True, dropout = 0.2)
+        self.attention = Attention(lstm_hidden_size)
+        self.classifier = nn.Linear(lstm_hidden_size, NUM_CLASSES)
+        self.apply(init_weights)
+
+    def forward(self, input_ids, attention_mask):
+        with torch.no_grad():
+            bert_output = self.bert(input_ids=input_ids, attention_mask=attention_mask)
+        bert_output = bert_output.last_hidden_state.permute(0, 2, 1) 
+        cnn_output = self.cnn(bert_output).squeeze(3)  
+        cnn_output = cnn_output.permute(0, 2, 1)  # Reshape to (batch_size, sequence_length, cnn_out_channels)
+        lstm_output, _ = self.lstm(cnn_output)
+        attention_output = self.attention(lstm_output)
         logits = self.classifier(attention_output)
         return logits
 
-class PaperArchitecture(nn.Module):
+class BaseModel(nn.Module):
     def __init__(self, bert_model_name, cnn_out_channels=100, lstm_hidden_size=256, num_classes=3):
-        super(PaperArchitecture, self).__init__()
+        super(BaseModel, self).__init__()
         self.bert = AutoModel.from_pretrained(bert_model_name)
         self.cnn = nn.Conv2d(in_channels=1, out_channels=cnn_out_channels, kernel_size=(3, self.bert.config.hidden_size), padding=(1, 0))
         self.lstm = nn.LSTM(input_size=cnn_out_channels, hidden_size=lstm_hidden_size, bidirectional=True, batch_first=True)
@@ -96,7 +112,15 @@ def load_checkpoint(model, checkpoint_path):
 config_path = './config.json'
 config, bert_model_name, device, dataset, test_dataset, tokenizer = setup_environment(config_path)
 
-model = BERT_2DCNN_LSTM()
+m = config["model_name"]
+if m == "1dCNN":
+    model = BERT_CNN_LSTM()
+elif m == "2dCNN_LSTM":
+    model = BERT_2DCNN_LSTM()
+elif m == "2dCNN_LSTM_Attn":
+    model = BERT_2DCNN_LSTM_Attn()
+else:
+    model = BaseModel()
 
 #replace model with checkpoint model if checkpoint is provided and asked for
 checkpoint_path = config["checkpoint_path"] 
