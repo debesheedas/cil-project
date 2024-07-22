@@ -29,7 +29,7 @@ def tokenize_data(example):
 def prepare_datasets(dataset, test_dataset):
     dataset = dataset.map(tokenize_data, batched=True)
     test_dataset = test_dataset.map(tokenize_data, batched=True)
-    dataset = dataset.train_test_split(test_size=0.1, seed=42)
+    dataset = dataset.train_test_split(test_size=config["test_size"], seed=42)
     data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
     return dataset, test_dataset, data_collator
 
@@ -37,7 +37,7 @@ def train_and_predict(model, dataset, test_dataset, data_collator):
     logging_steps = len(dataset['train']) // config["batch_size"]
     print(logging_steps)
 
-    early_stop = EarlyStoppingCallback(early_stopping_patience=1)
+    early_stop = EarlyStoppingCallback(early_stopping_patience=6, early_stopping_threshold=0.001)
 
     training_args = TrainingArguments(
         output_dir=config["output_dir"],
@@ -96,7 +96,7 @@ config_path = './config.json'
 config, bert_model_name, device, dataset, test_dataset, tokenizer = setup_environment(config_path)
 
 dataset, test_dataset, data_collator = prepare_datasets(dataset, test_dataset)
-
+print(test_dataset[0:5])
 model = AutoModelForSequenceClassification.from_pretrained(bert_model_name, num_labels=2).to(device)
 
 #replace model with checkpoint model if checkpoint is provided and asked for
