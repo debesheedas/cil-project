@@ -37,7 +37,7 @@ def train_and_predict(model, dataset, test_dataset, data_collator):
     logging_steps = len(dataset['train']) // config["batch_size"]
     print(logging_steps)
 
-    early_stop = EarlyStoppingCallback(early_stopping_patience=3, early_stopping_threshold=0.001)
+    early_stop = EarlyStoppingCallback(early_stopping_patience=3)
 
     training_args = TrainingArguments(
         output_dir=config["output_dir"],
