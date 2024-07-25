@@ -23,7 +23,7 @@ assert np.sum(weights) == 1
 for pred_file in prediction_paths:
     df = pd.read_csv(pred_file)
     # print(len(df['Prediction']))
-    data.append(df['Prediction'])
+    data.append(df['Prediction']-0.5)
 
 # print(np.array(data).shape)
 
@@ -31,7 +31,7 @@ final_probs = np.average(data, weights=weights, axis=0)
 # print(final_probs.shape)
 
 # final_preds = final_probs
-final_preds = [-1 if val <0.5 else 1 for val in final_probs]
+final_preds = [-1 if val <0.0 else 1 for val in final_probs]
 # print(np.sum(final_preds))
 
 final_df = pd.DataFrame(final_preds, columns=["Prediction"])

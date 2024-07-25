@@ -97,7 +97,7 @@ config_path = './config.json'
 config, bert_model_name, device, dataset, test_dataset, tokenizer = setup_environment(config_path)
 
 dataset, test_dataset, data_collator = prepare_datasets(dataset, test_dataset)
-print(test_dataset[0:5])
+# print(test_dataset[0:5])
 model = AutoModelForSequenceClassification.from_pretrained(bert_model_name, num_labels=2).to(device)
 
 #replace model with checkpoint model if checkpoint is provided and asked for

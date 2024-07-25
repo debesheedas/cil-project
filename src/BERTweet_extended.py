@@ -73,13 +73,12 @@ class BERT_2DCNN_LSTM_Attn(nn.Module):
         logits = self.classifier(attention_output)
         return logits
 
-class BaseModel(nn.Module):
+class BERT_2DCNN_BiLSTM(nn.Module):
     def __init__(self, bert_model_name, cnn_out_channels=100, lstm_hidden_size=256, num_classes=3):
-        super(BaseModel, self).__init__()
+        super(BERT_2DCNN_BiLSTM, self).__init__()
         self.bert = AutoModel.from_pretrained(bert_model_name)
         self.cnn = nn.Conv2d(in_channels=1, out_channels=cnn_out_channels, kernel_size=(3, self.bert.config.hidden_size), padding=(1, 0))
         self.lstm = nn.LSTM(input_size=cnn_out_channels, hidden_size=lstm_hidden_size, bidirectional=True, batch_first=True, dropout=0.2)
-        #self.dropout = nn.Dropout(p=0.2)
         self.classifier = nn.Linear(lstm_hidden_size * 2, num_classes)
 
     def forward(self, input_ids, attention_mask):
@@ -88,9 +87,28 @@ class BaseModel(nn.Module):
         bert_output = bert_output.last_hidden_state.permute(0, 2, 1).unsqueeze(1) 
         cnn_output = self.cnn(bert_output).squeeze(3) 
         cnn_output = cnn_output.permute(0, 2, 1) 
-        lstm_output, _ = self.lstm(cnn_output)  
-        #lstm_output = self.dropout(lstm_output)
+        lstm_output, _ = self.lstm(bert_output)  
         logits = self.classifier(lstm_output[:, -1, :])  
+        return logits
+
+class BERT_2DCNN_BiLSTM_Attn(nn.Module):
+    def __init__(self, bert_model_name, cnn_out_channels=100, lstm_hidden_size=256, num_classes=3):
+        super(BERT_2DCNN_BiLSTM_Attn, self).__init__()
+        self.bert = AutoModel.from_pretrained(bert_model_name)
+        self.cnn = nn.Conv2d(in_channels=1, out_channels=cnn_out_channels, kernel_size=(3, self.bert.config.hidden_size), padding=(1, 0))
+        self.lstm = nn.LSTM(input_size=cnn_out_channels, hidden_size=lstm_hidden_size, bidirectional=True, batch_first=True, dropout=0.2)
+        self.attention = Attention(lstm_hidden_size * 2)
+        self.classifier = nn.Linear(lstm_hidden_size * 2, num_classes)
+
+    def forward(self, input_ids, attention_mask):
+        with torch.no_grad():
+            bert_output = self.bert(input_ids=input_ids, attention_mask=attention_mask)
+        bert_output = bert_output.last_hidden_state.permute(0, 2, 1).unsqueeze(1) 
+        cnn_output = self.cnn(bert_output).squeeze(3) 
+        cnn_output = cnn_output.permute(0, 2, 1) 
+        lstm_output, _ = self.lstm(cnn_output)
+        attention_output = self.attention(lstm_output)  
+        logits = self.classifier(attention_output[:, -1, :])  
         return logits
 
 class Attention(nn.Module):
@@ -127,7 +145,7 @@ else:
     model = BaseModel()
     logger.info("base model")
 """
-model = BaseModel()
+model = BERT_2DCNN_LSTM_Attn()
 
 #replace model with checkpoint model if checkpoint is provided and asked for
 checkpoint_path = config["checkpoint_path"] 
