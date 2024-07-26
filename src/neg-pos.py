@@ -1,12 +1,16 @@
 import pandas as pd
 import json
+import json
 import re
 from segmentHashtags import *
 from nltk.stem import PorterStemmer
 
 stemmer = PorterStemmer()
+from nltk.stem import PorterStemmer
 
-HASHTAG_SEGM=False
+stemmer = PorterStemmer()
+
+HASHTAG_SEGM=True
 USR=False
 ABBREV=False
 EMOJI=True
@@ -294,6 +298,7 @@ def find_and_remove_common_tweets(pos_file, neg_file, pos_unique_file, neg_uniqu
     # duplicates = combined_df.duplicated(subset='tweet', keep=False)
     # unique_df = combined_df[~duplicates]
     # unique_df = combined_df
+    # unique_df = combined_df
     # neg_unique_df = unique_df[unique_df['label'] == 'negative'].drop(columns=['label'])
 
     write_tweets_from_df(pos_unique_file, pos_unique_df)
@@ -312,8 +317,12 @@ def replace_tags(filename_old, filename_new):
     tweets = read_tweets(filename_old)
     if HASHTAG_SEGM: tweets = process_hashtags(tweets)
     if USR: modified_tweets = [tweet.replace("<user>", "@USER") for tweet in tweets]
+    if USR: modified_tweets = [tweet.replace("<user>", "@USER") for tweet in tweets]
     else: modified_tweets = [tweet.replace("<user>", "") for tweet in tweets]
     modified_tweets = [tweet.replace("<url>", "HTTPURL") for tweet in modified_tweets]
+    if ABBREV: modified_tweets = [replace_abbreviation(x, abbreviations) for x in modified_tweets]
+    if EMOJI: modified_tweets = [replace_emojis(x, emojis) for x in modified_tweets]
+    if STEM: modified_tweets = [stem_tweet(x) for x in modified_tweets]
     if ABBREV: modified_tweets = [replace_abbreviation(x, abbreviations) for x in modified_tweets]
     if EMOJI: modified_tweets = [replace_emojis(x, emojis) for x in modified_tweets]
     if STEM: modified_tweets = [stem_tweet(x) for x in modified_tweets]
@@ -342,4 +351,5 @@ find_and_remove_common_tweets(positive_tweets_file, negative_tweets_file, pos_un
 # Replace tags in the unique tweets files
 replace_tags(pos_unique_file, pos_unique_file)
 replace_tags(neg_unique_file, neg_unique_file)
+replace_tags(test_file, config["test_path"])
 replace_tags(test_file, config["test_path"])

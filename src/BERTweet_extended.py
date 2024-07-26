@@ -145,7 +145,7 @@ else:
     model = BaseModel()
     logger.info("base model")
 """
-model = BERT_2DCNN_LSTM_Attn()
+model = BERT_2DCNN_BiLSTM_Attn()
 
 #replace model with checkpoint model if checkpoint is provided and asked for
 checkpoint_path = config["checkpoint_path"] 
