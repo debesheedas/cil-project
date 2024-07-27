@@ -12,7 +12,12 @@
 Create a virtual environment if you desire, and then run the following command in the home directory to install all the required packages
 
 ```pip install -r requirements.txt```
-
+## Data Analysis
+## Preprocessing
+## Baselines
+Classical Methods
+BERTweet
+## BERTweetConvFusionNet
 Our text classification pipeline is broken into the following segments for modularity:
 1. Data Preprocessing
 2. Training Model and Generating Predictions
