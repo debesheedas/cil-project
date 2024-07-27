@@ -1,3 +1,8 @@
+#inspiration taken from the following two Github codes:
+#https://github.com/prateekjoshi565/twitter_sentiment_analysis/blob/master/code_sentiment_analysis.ipynb
+#https://www.kaggle.com/code/stoicstatic/twitter-sentiment-analysis-for-beginners
+
+
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
