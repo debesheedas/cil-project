@@ -28,6 +28,8 @@ Run the analysis.ipynb file to see a vizualization of the dataset and get an ide
 
 The neg-pos.py file consists of all the preprocessing discussed in the paper. Apart from the default settings, other options can be enabled using the flags. For example, if you want to replace the abbreviations with their full forms, you only need to set the ABBREV flag to True and then generate the preprocessed dataset. The paths to the preprocessed dataset and test data are already added to the config file. segmentHashtags.py is a separate file that is used to break up the words in a hashtag to take that sentiment into account.
 
+
+
 ## Baselines
 
 - Classical Methods:
@@ -46,7 +48,7 @@ You can choose between the following options for the novel architecture and set 
 - 2dCNN_LSTM: to use the BERTweet embeddings with a 2D-CNN and uni-directional LSTM
 - 2dCNN_biLSTM: to use the BERTweet embeddings with a 2D-CNN and bi-directional LSTM
 - 2dCNN_LSTM_Attn: to use the BERTweet embeddings with a 2D-CNN and uni-directional LSTM, followed by an attention layer
-- 2dCNN_LSTM_Attn: to use the BERTweet embeddings with a 2D-CNN and bi-directional LSTM, followed by an attention layer
-If nothing is initialized, the best model (xyz) is used. 
+- 2dCNN_biLSTM_Attn: to use the BERTweet embeddings with a 2D-CNN and bi-directional LSTM, followed by an attention layer
+If nothing is initialized, 2dCNN_biLSTM is used. 
 
 Once we obtain the probabilites for each model, we run an ensembling using ensemble.py. To achieve the best score, load the probabilities.csv of all the models into the config (you have to change the paths to match your folder structure).
