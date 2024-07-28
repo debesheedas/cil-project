@@ -1,12 +1,12 @@
-#inspiration taken from the following two Github codes:
+#inspiration taken from the following approaches:
 #https://github.com/prateekjoshi565/twitter_sentiment_analysis/blob/master/code_sentiment_analysis.ipynb
 #https://www.kaggle.com/code/stoicstatic/twitter-sentiment-analysis-for-beginners
+#https://www.kaggle.com/code/asifajunaidahmad/twitter-analysis-preprocessing 
 
 
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
-from wordcloud import WordCloud
 import seaborn as sns
 import re
 import numpy as np
@@ -144,27 +144,6 @@ print("stemmed all tweets\n")
 combi['clean_tweet'].to_csv("prep_data.csv", index=False)
 print("----Preprocessing ends----\n")
 print(combi.head())
-
-all_words = ' '.join([text for text in combi['clean_tweet']])
-wordcloud = WordCloud(width=900, height=800, random_state=13, max_font_size=120).generate(all_words)
-plt.axis('off')
-plt.imshow(wordcloud, interpolation="bilinear")
-plt.figure(figsize=(13, 9))
-plt.show()
-
-normal_words =' '.join([text for text in combi['clean_tweet'][combi['label'] == 1]])
-wordcloud = WordCloud(width=900, height=800, random_state=13, max_font_size=120).generate(normal_words)
-plt.axis('off')
-plt.imshow(wordcloud, interpolation="bilinear")
-plt.figure(figsize=(13, 9))
-plt.show()
-
-negative_words = ' '.join([text for text in combi['clean_tweet'][combi['label'] == -1]])
-wordcloud = WordCloud(width=900, height=800, random_state=13, max_font_size=120).generate(negative_words)
-plt.axis('off')
-plt.imshow(wordcloud, interpolation="bilinear")
-plt.figure(figsize=(13, 9))
-plt.show()
 
 print("Creating sentence embeddings\n")
 sentence_embed=SentenceTransformer("bert-base-nli-mean-tokens")
@@ -308,12 +287,6 @@ def model_Evaluate(model):
 
 accuracies=[]
 
-print("Bernoulli training started\n")
-BNBmodel = BernoulliNB(alpha = 2)
-BNBmodel.fit(xtrain_sent, ytrain)
-bnb_accuracy = model_Evaluate(BNBmodel)
-accuracies.append(bnb_accuracy)
-
 print("SVC training started\n")
 SVCmodel = LinearSVC(tol=1e-5, max_iter=2000)
 SVCmodel.fit(xtrain_bow, ytrain)
@@ -351,13 +324,6 @@ df = predict(SVCmodel)
 print(df.columns)
 df_selected = df[['id', 'label']]
 df_selected.to_csv('predictions_SVC.csv', index=False, header=['Id', 'Prediction'])
-print("CSV file has been saved.")
-
-print("BNB prediction started\n")
-df = predict(BNBmodel)
-print(df.columns)
-df_selected = df[['id', 'label']]
-df_selected.to_csv('predictions_BNB.csv', index=False, header=['Id', 'Prediction'])
 print("CSV file has been saved.")
 
 
@@ -449,7 +415,7 @@ submission = test[['id','prediction']]
 submission.to_csv('sub_rf_sent.csv', index=False)
 
 #---Bag of Words----
-rf = RandomForestClassifier(n_estimators=400, random_state=11, max_depth=100).fit(xtrain_bow, ytrain)
+rf = RandomForestClassifier(n_estimators=400, random_state=11, max_depth=10).fit(xtrain_bow, ytrain)
 
 prediction = rf.predict(xvalid_bow)
 rf_bow_accuracy = accuracy_score(yvalid, prediction)
