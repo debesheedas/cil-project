@@ -12,7 +12,7 @@ Our text classification pipeline is broken into the following segments for modul
 3. Training Model and Generating Predictions
 4. Combining Predictions
 
-Throughout our systematic and research oriented approach, we tried out various preprocessing techniques, models - each with various hyperparameter configurations. Hence, we decided to breakup the pipeline as above, allowing us to combine prdictions generated using different methods into a final prediction in Step 3. 
+Throughout our systematic and research oriented approach, we tried out various preprocessing techniques, models - each with various hyperparameter configurations. Hence, we decided to breakup the pipeline as above, allowing us to combine predictions generated using different methods into a final prediction in Step 4. 
 
 ## Setup Instructions
 
