@@ -4,17 +4,14 @@
 #https://www.kaggle.com/code/asifajunaidahmad/twitter-analysis-preprocessing 
 
 
-import os
+import json
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-import re
 import numpy as np
-import nltk
 import csv
 from nltk.stem import PorterStemmer
 import gensim
-import torch
 from scipy.sparse import vstack
 
 from sklearn.svm import LinearSVC
@@ -23,15 +20,15 @@ from sklearn.linear_model import LogisticRegression
 from sentence_transformers import SentenceTransformer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn import svm
-from transformers import Trainer, TrainingArguments
-
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-from sklearn.metrics import f1_score
 from sklearn.metrics import confusion_matrix, classification_report, accuracy_score
 
-file1 = '/home/pgoyal/cil-project/data/train_pos_full.txt'
-file2 = '/home/pgoyal/cil-project/data/train_neg_full.txt'
+f = open('../config.json')
+config = json.load(f)
+
+file1 = config["pos_training_path"]
+file2 = config["neg_training_path"]
 
 df = pd.read_fwf(file1)
 df.to_csv('train_pos.csv', index=False)
@@ -89,9 +86,10 @@ print(f"combined dataframe: \n{train.head()}")
 
 print(f"size of combined training dataframe = {train.shape}\n")
 
-with open('/home/pgoyal/cil-project/data/test_data.txt', 'r') as f:
+with open(config["test_prep"], 'r') as f:
     lines = f.readlines()
 
+#remove the IDs from the test file
 with open('test.csv', 'w', newline='', encoding='utf-8') as csvfile:
     writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
     writer.writerow(['id', 'tweet'])  # Write the header row
@@ -170,6 +168,7 @@ bow_vectorizer = CountVectorizer(max_df=0.90, min_df=2, max_features=1000, stop_
 bow = bow_vectorizer.fit_transform(combi['clean_tweet'])
 
 # Process in batches for final dataset
+
 # initial_batch = tweets[:batch_size]
 # bow = bow_vectorizer.fit_transform(initial_batch)
 # for i in range(batch_size, len(tweets), batch_size):

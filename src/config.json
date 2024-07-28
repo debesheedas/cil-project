@@ -2,21 +2,24 @@
     "bert_model_name": "vinai/bertweet-base",
     "model_name": "1dCNN", 
     "batch_size": 64,
-    "output_dir": "/home/debdas/cil/cil-project/output",
+    "output_dir": "/home/laschulz/cil-project/output",
     "learning_rate": 2e-5,
-    "epochs": 3,
+    "epochs": 4,
     "weight_decay": 0.01,
-    "neg_training_path": "/home/laschulz/cil-project/data/train_neg_full.txt",
-    "pos_training_path": "/home/laschulz/cil-project/data/train_pos_full.txt",
-    "test_path": "/home/laschulz/cil-project/data/test_data_edited.txt",
+    "neg_training_path": "/home/laschulz/cil-project/data/prep_neg.txt",
+    "pos_training_path": "/home/laschulz/cil-project/data/prep_pos.txt",
+    "test_path": "/home/laschulz/cil-project/data/prep_test.txt",
     "neg_prep_path": "/home/laschulz/cil-project/data/train_neg.txt",
     "pos_prep_path": "/home/laschulz/cil-project/data/train_pos.txt",
-    "test_prep_path": "/home/laschulz/cil-project/data/test_data_edited.txt",
+    "test_prep_path": "/home/laschulz/cil-project/data/test_data.txt",
     "load_checkpoint": false,
     "checkpoint_path": "",
-    "eval_freq": 10, 
-    "test_size": 0.05,
+    "eval_freq": 5, 
+    "test_size": 0.1,
     "prediction_paths": [
-    ""
+    "/home/laschulz/cil-project/data/final_table/BERT_2DCNN_BiLSTM_Attn/prob.csv",
+    "/home/laschulz/cil-project/data/final_table/no_pre/prob.csv",
+    "/home/laschulz/cil-project/data/final_table/bertweet_best_preprocessing/prob.csv",
+    "/home/laschulz/cil-project/data/final_table/BERT_2DCNN_BiLSTM/prob.csv"
 ]
 }

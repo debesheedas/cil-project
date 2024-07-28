@@ -13,26 +13,24 @@ output_path = config['output_dir']
 prediction_paths = config['prediction_paths']
 
 data = []
-# Weights are by default initialized to give equal weightage to each prediction set. Can be modified below
-weights = [(1/len(prediction_paths))]*len(prediction_paths)
-# weights = [0.2,0.8]
+
+# Weights are by default initialized to give equal weightage to each prediction set. 
+weights = [(1/len(prediction_paths))]*len(prediction_paths) 
+#Can be modified as below
+#weights = [0.2, 0.8]
+
 print("Weights", weights)
+
 #Make sure weights sum up to 1
 assert np.sum(weights) == 1
 
 for pred_file in prediction_paths:
     df = pd.read_csv(pred_file)
-    # print(len(df['Prediction']))
     data.append(df['Prediction']-0.5)
 
-# print(np.array(data).shape)
-
 final_probs = np.average(data, weights=weights, axis=0)
-# print(final_probs.shape)
 
-# final_preds = final_probs
 final_preds = [-1 if val <0.0 else 1 for val in final_probs]
-# print(np.sum(final_preds))
 
 final_df = pd.DataFrame(final_preds, columns=["Prediction"])
 final_df.index.name = "Id"
