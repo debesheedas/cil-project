@@ -49,4 +49,4 @@ You can choose between the following options for the novel architecture and set 
 - 2dCNN_LSTM_Attn: to use the BERTweet embeddings with a 2D-CNN and bi-directional LSTM, followed by an attention layer
 If nothing is initialized, the best model (xyz) is used. 
 
-Once we obtain the probabilites for each model, we run an ensembling using the ensemble.py. To achieve the best score, run the following commands with the current config.json initialisation (you only have to change the paths to match your folder structure).
+Once we obtain the probabilites for each model, we run an ensembling using ensemble.py. To achieve the best score, load the probabilities.csv of all the models into the config (you have to change the paths to match your folder structure).
