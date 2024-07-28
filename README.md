@@ -6,6 +6,12 @@
 - Mariia
 - Piyushi
 
+Our text classification pipeline is broken into the following segments for modularity:
+1. Data Preprocessing
+2. Training Model and Generating Predictions
+3. Combining Predictions
+
+Throughout our systematic and research oriented approach, we tried out various preprocessing techniques, models - each with various hyperparameter configurations. Hence, we decided to breakup the pipeline as above, allowing us to combine prdictions generated using different methods into a final prediction in Step 3. 
 
 ## Setup Instructions
 
@@ -18,13 +24,6 @@ Create a virtual environment if you desire, and then run the following command i
 Classical Methods
 BERTweet
 ## BERTweetConvFusionNet
-Our text classification pipeline is broken into the following segments for modularity:
-1. Data Preprocessing
-2. Training Model and Generating Predictions
-3. Combining Predictions
-
-Throughout our systematic and research oriented approach, we tried out various preprocessing techniques, models - each with various hyperparameter configurations. Hence, we decided to breakup the pipeline as above, allowing us to combine prdictions generated using different methods into a final prediction in Step 3. 
-
 
 You can choose between the following options for the novel architecture and set these strings in the config.json:
 - 1dCNN_LSTM: to use the BERTweet embeddings with a 1D-CNN and uni-directional LSTM
