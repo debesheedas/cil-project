@@ -1,6 +1,6 @@
 {
     "bert_model_name": "vinai/bertweet-base",
-    "model_name": "1dCNN", 
+    "model_name": "2dCNN_biLSTM", 
     "batch_size": 64,
     "output_dir": "/home/laschulz/cil-project/output",
     "learning_rate": 2e-5,
