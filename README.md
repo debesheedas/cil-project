@@ -63,6 +63,8 @@ To fine-tune the model using a pre-processed dataset, simply change the correspo
 _BERTweetConvFusionNet_, our novel architecture, is a Convolutional Recurrent Neural Network or CRNN-based 'fusion net', notable for its ability to to capture local and sequential patterns and context in the text data, leading to better performance in sentiment classification. Building on previous work [[2]](#2), our novel introduction is the addition of an Attention layer. We also try out both Bi-LSTM and LSTM alongwith 1D and 2D CNN layers. 
 Various configuations can be built and fine-tuned using [BERTweet_extended.py](./src/3-Models/BERTweet_extended.py). 
 
+![Picture of architecture of BERTweetConvFusionNet](https://github.com/user-attachments/assets/4bf00797-694a-4293-86f3-6b748565fb40)
+
 
 You can choose between the following options for the novel architecture and set these strings in the [``config.json``](./src/config.json). The default model used is a ``2dCNN_biLSTM``. All other model parameters such as ``epoch`` and ``batch_size`` can be modified similarly [BERTweet.py](./src/3-Models/BERTweet.py).
 ```
