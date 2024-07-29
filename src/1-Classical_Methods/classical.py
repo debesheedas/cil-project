@@ -24,18 +24,20 @@ from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.metrics import confusion_matrix, classification_report, accuracy_score
 
-f = open('../config.json')
+f = open('../config2.json')
 config = json.load(f)
 
 file1 = config["pos_training_path"]
 file2 = config["neg_training_path"]
+
+embed_type = config["embedding_type"]
+model_type = config["model_type"]
 
 df = pd.read_fwf(file1)
 df.to_csv('train_pos.csv', index=False)
 
 df = pd.read_fwf(file2)
 df.to_csv('train_neg.csv', index=False)
-
 
 # Process negative tweets
 with open('train_neg.csv', 'r') as file:
@@ -84,9 +86,10 @@ combined_tweets.to_csv('train_data.csv', index=False)
 train  = pd.read_csv('train_data.csv')
 print(f"combined dataframe: \n{train.head()}")
 
-print(f"size of combined training dataframe = {train.shape}\n")
+print(f"size of combined training dataframe = {train.shape[0]}\n")
+dataset_size = train.shape[0]
 
-with open(config["test_prep"], 'r') as f:
+with open(config["test_path"], 'r') as f:
     lines = f.readlines()
 
 #remove the IDs from the test file
@@ -108,7 +111,7 @@ plt.legend()
 plt.show()
 
 combi = train._append(test, ignore_index=True)
-print(f"shape of train + test combined={combi.shape}\n")
+print(f"shape of train + test combined={combi.shape[0]}\n")
 
 print("----Preprocessing begins----\n")
 
@@ -143,118 +146,68 @@ combi['clean_tweet'].to_csv("prep_data.csv", index=False)
 print("----Preprocessing ends----\n")
 print(combi.head())
 
-print("Creating sentence embeddings\n")
-sentence_embed=SentenceTransformer("bert-base-nli-mean-tokens")
-sentence_vector=sentence_embed.encode(combi['clean_tweet'])
-sentence_embed = SentenceTransformer("bert-base-nli-mean-tokens")
+def create_splits(train_embed, train):
+    return train_test_split(train_embed, train['label'], random_state=42, test_size=config["test_size"])
 
-#uncomment this part to run on the final dataset with batches
+def create_embeddings(embed_type, combi):
+    if embed_type == "SentenceTransformer":
+        print("Creating sentence embeddings\n")
+        sentence_embed = SentenceTransformer("bert-base-nli-mean-tokens")
+        sentence_vectors=sentence_embed.encode(combi['clean_tweet'])
+        train_sent = sentence_vectors[:dataset_size,:]
+        test_embed = sentence_vectors[dataset_size:,:]
+        xtrain, xvalid, ytrain, yvalid = create_splits(train_sent, train)
+        return xtrain, xvalid, ytrain, yvalid, test_embed
+    elif embed_type == "Bow":
+        print("Creating BOW vectors\n")
+        bow_vectorizer = CountVectorizer(max_df=0.90, min_df=2, max_features=1000, stop_words='english')
+        bow = bow_vectorizer.fit_transform(combi['clean_tweet'])
+        train_bow = bow[:dataset_size,:]
+        test_embed = bow[dataset_size:,:]
+        xtrain, xvalid, ytrain, yvalid = create_splits(train_bow, train)
+        return xtrain, xvalid, ytrain, yvalid, test_embed
+    elif embed_type == "Tfidf":
+        print("Creating TF-IDF vectors\n")
+        tfidf_vectorizer = TfidfVectorizer(max_df=0.90, min_df=2, max_features=1000, stop_words='english')
+        tfidf = tfidf_vectorizer.fit_transform(combi['clean_tweet'])
+        train_tfidf = tfidf[:dataset_size,:]
+        test_embed = tfidf[dataset_size:,:]
+        xtrain, xvalid, ytrain, yvalid = create_splits(train_tfidf, train)
+        return xtrain, xvalid, ytrain, yvalid, test_embed
+    else:
+        print("Creating Word2Vec vectors\n")
+        tokenized_tweet = combi['clean_tweet'].apply(lambda x: x.split()) 
+        model_w2v = gensim.models.Word2Vec(
+                    tokenized_tweet,
+                    vector_size=200, 
+                    window=4, 
+                    min_count=2,
+                    sg = 1, 
+                    hs = 0,
+                    negative = 8, 
+                    workers= 2, 
+                    seed = 31)
+        model_w2v.train(tokenized_tweet, total_examples= len(combi['clean_tweet']), epochs=20)
+        def word_vector(tokens, size):
+            vec = np.zeros((1, size))
+            valid_tokens = [model_w2v.wv[word].reshape(1, size) for word in tokens if word in model_w2v.wv]
+            if valid_tokens:
+                vec = np.mean(valid_tokens, axis=0)   
+            return vec
+        wordvec_arrays = np.zeros((len(tokenized_tweet), 200))
+        for i in range(len(tokenized_tweet)):
+            wordvec_arrays[i,:] = word_vector(tokenized_tweet[i], 200)
+        wordvec_df = pd.DataFrame(wordvec_arrays)
+        train_w2v = wordvec_df.iloc[:dataset_size,:]
+        test_embed = wordvec_df.iloc[dataset_size:,:]
+        xtrain, xvalid, ytrain, yvalid = create_splits(train_w2v, train)
+        return xtrain, xvalid, ytrain, yvalid, test_embed
 
-# tweets = [str(tweet) for tweet in tweets]
-# batch_size = 256
-# embeddings = []
-# for i in range(0, len(tweets), batch_size):
-#     batch = tweets[i:i + batch_size]
-#     try:
-#         batch_embeddings = sentence_embed.encode(batch)
-#         embeddings.extend(batch_embeddings)
-#     except Exception as e:
-#         print(f"Error processing batch {i // batch_size + 1}: {e}")
-#         continue  # or continue to skip the problematic batchbatch = tweets[i:i + batch_size]
-# sentence_vectors = np.array(embeddings)
-
-print("Creating BOW vectors\n")
-bow_vectorizer = CountVectorizer(max_df=0.90, min_df=2, max_features=1000, stop_words='english')
-bow = bow_vectorizer.fit_transform(combi['clean_tweet'])
-
-# Process in batches for final dataset
-
-# initial_batch = tweets[:batch_size]
-# bow = bow_vectorizer.fit_transform(initial_batch)
-# for i in range(batch_size, len(tweets), batch_size):
-#     batch = tweets[i:i + batch_size]
-#     batch_bow = bow_vectorizer.transform(batch)
-#     bow = vstack([bow, batch_bow])
-
-print("Creating TF-IDF vectors\n")
-tfidf_vectorizer = TfidfVectorizer(max_df=0.90, min_df=2, max_features=1000, stop_words='english')
-tfidf = tfidf_vectorizer.fit_transform(combi['clean_tweet'])
-
-# Word2Vec Embedding
-print("Creating Word2Vec vectors\n")
-tokenized_tweet = combi['clean_tweet'].apply(lambda x: x.split()) 
-
-model_w2v = gensim.models.Word2Vec(
-            tokenized_tweet,
-            vector_size=200, 
-            window=4, 
-            min_count=2,
-            sg = 1, 
-            hs = 0,
-            negative = 8, 
-            workers= 2, 
-            seed = 31)
-
-model_w2v.train(tokenized_tweet, total_examples= len(combi['clean_tweet']), epochs=20)
-
-def word_vector(tokens, size):
-    vec = np.zeros((1, size))
-    valid_tokens = [model_w2v.wv[word].reshape(1, size) for word in tokens if word in model_w2v.wv]
-    if valid_tokens:
-        vec = np.mean(valid_tokens, axis=0)   
-    return vec
-
-wordvec_arrays = np.zeros((len(tokenized_tweet), 200))
-
-for i in range(len(tokenized_tweet)):
-    wordvec_arrays[i,:] = word_vector(tokenized_tweet[i], 200)
-    
-wordvec_df = pd.DataFrame(wordvec_arrays)
-
-#Create train, val and test splits
-#change the index numbers depending on the dataset size (total number of positive and negative tweets). 
-
-# SENTENCE EMBEDDING
-print("Creating splits using sentence embeddings\n")
-train_sent = sentence_vectors[:2500000,:]
-test_sent = sentence_vectors[2500000:,:]
-
-# splitting data into training and validation set
-# The embeddings which aren't required can be commented out and the train and validation indices can be obtained by running the following line for the specific embedding type
-xtrain_sent, xvalid_sent, ytrain, yvalid = train_test_split(train_sent, train['label'], random_state=42, test_size=0.1)
-
-# BAG OF WORDS
-print("Creating splits using BOW\n")
-train_bow = bow[:2500000,:]
-test_bow = bow[2500000:,:]
-
-xtrain_bow = train_bow[ytrain.index]
-xvalid_bow = train_bow[yvalid.index]
-print(xvalid_bow.shape)
-
-# TF-IDF
-print("Creating splits using TF-IDF\n")
-train_tfidf = tfidf[:2500000,:]
-test_tfidf = tfidf[2500000:,:]
-
-xtrain_tfidf = train_tfidf[ytrain.index]
-xvalid_tfidf = train_tfidf[yvalid.index]
-
-# WORD2VEC
-print("Creating splits using Word2Vec\n")
-train_w2v = wordvec_df.iloc[:2500000,:]
-test_w2v = wordvec_df.iloc[2500000:,:]
-
-xtrain_w2v = train_w2v.iloc[ytrain.index,:]
-xvalid_w2v = train_w2v.iloc[yvalid.index,:]
-
-#You can run both the approaches and compare which one gives better results. We run LR with approach 1 and RF with approach 2.
-
-#APPROACH 1
+xtrain, xvalid, ytrain, yvalid, test_embed = create_embeddings(embed_type, combi)
 
 def model_Evaluate(model):
     # Predict values for Test dataset
-    y_pred = model.predict(xvalid_sent)
+    y_pred = model.predict(xvalid)
     # Check if lengths match
     if len(yvalid) != len(y_pred):
         raise ValueError(f"Length mismatch: yvalid has {len(yvalid)} samples, y_pred has {len(y_pred)} samples.")
@@ -265,7 +218,6 @@ def model_Evaluate(model):
     print(classification_report(yvalid, y_pred))
     eval_accuracy = accuracy_score(yvalid, y_pred)
     print(f"Eval Accuracy: {eval_accuracy}")
-    return eval_accuracy
     # Compute and plot the Confusion matrix
     cf_matrix = confusion_matrix(yvalid, y_pred)
 
@@ -283,24 +235,11 @@ def model_Evaluate(model):
     plt.ylabel("Actual values", fontdict={'size':14}, labelpad=10)
     plt.title("Confusion Matrix", fontdict={'size':18}, pad=20)
     plt.show()
-
-accuracies=[]
-
-print("SVC training started\n")
-SVCmodel = LinearSVC(tol=1e-5, max_iter=2000)
-SVCmodel.fit(xtrain_bow, ytrain)
-svc_accuracy = model_Evaluate(SVCmodel)
-accuracies.append(svc_accuracy)
-
-print("LR training started\n")
-LRmodel = LogisticRegression(C = 2, max_iter = 1000, n_jobs=-1)
-LRmodel.fit(xtrain_sent, ytrain)
-lr_accuracy = model_Evaluate(LRmodel)
-accuracies.append(lr_accuracy)
+    return eval_accuracy
 
 def predict(model):
     # Predict the sentiment
-    sentiment = model.predict(test_sent)
+    sentiment = model.predict(test_embed)
     tweet_list = test['tweet'].tolist()
     id_list = test['id'].tolist()
     print(tweet_list[0])
@@ -311,144 +250,75 @@ def predict(model):
     df = pd.DataFrame(data, columns=['id', 'tweet', 'label'])
     return df
 
-print("LR prediction started\n")
-df = predict(LRmodel)
-print(df.columns)
-df_selected = df[['id', 'label']]
-df_selected.to_csv('predictions_LR.csv', index=False, header=['Id', 'Prediction'])
-print("CSV file has been saved.")
+def create_predictions_csv(df):
+    df_selected = df[['id', 'label']]
+    df_selected.to_csv('predictions_SVC.csv', index=False, header=['Id', 'Prediction'])
+    print("CSV file has been saved.")
 
-print("SVC prediction started\n")
-df = predict(SVCmodel)
-print(df.columns)
-df_selected = df[['id', 'label']]
-df_selected.to_csv('predictions_SVC.csv', index=False, header=['Id', 'Prediction'])
-print("CSV file has been saved.")
+accuracies=[]
 
+def model_training_and_prediction(model_type):
+    if model_type == "LinearSVC":
+        print("Linear SVC training started\n")
+        SVCmodel = LinearSVC(tol=1e-5, max_iter=2000)
+        SVCmodel.fit(xtrain, ytrain)
+        svc_accuracy = model_Evaluate(SVCmodel)
+        accuracies.append((model_type, svc_accuracy))
+        print("LinearSVC prediction started\n")
+        df = predict(SVCmodel)
+        print(df.columns)
+        create_predictions_csv(df)
+    
+    elif model_type == "svm-SVC":
+        print("svm.SVC training started\n")
+        svc = svm.SVC(kernel='linear', C=1, probability=True, max_iter=5000, verbose=1).fit(xtrain, ytrain)
+        prediction = svc.predict_proba(xvalid)
+        prediction_int = prediction[:,1] >= 0.3
+        prediction_int = prediction_int.astype(np.int64)
+        svc_accuracy = accuracy_score(yvalid, prediction_int)
+        accuracies.append((model_type, svc_accuracy))
+        print("svm.SVC prediction started\n")
+        test_pred = svc.predict_proba(test_embed)
+        test_pred_int = test_pred[:,1] >= 0.3
+        test_pred_int = test_pred_int.astype(np.int64)
+        test['label'] = test_pred_int
+        submission = test[['id','label']]
+        submission.to_csv('sub_svc.csv', index=False)
 
-#APPROACH 2
-#Comment out the code for the embeddings you do not want to try
+    elif model_type == "LR":
+        print("LR training started\n")
+        LRmodel = LogisticRegression(C = 2, max_iter = 1000, n_jobs=-1)
+        LRmodel.fit(xtrain, ytrain)
+        lr_accuracy = model_Evaluate(LRmodel)
+        accuracies.append((model_type, lr_accuracy))
+        print("LR prediction started\n")
+        df = predict(LRmodel)
+        print(df.columns)
+        create_predictions_csv(df)
 
-#**SVM**
+    elif model_type == "RF":
+        print("RF training started\n")
+        rf = RandomForestClassifier(n_estimators=400, random_state=11, max_depth=100).fit(xtrain, ytrain)
+        prediction = rf.predict(xvalid)
+        rf_accuracy = accuracy_score(yvalid, prediction)
+        accuracies.append((model_type, rf_accuracy))
+        print("RF prediction started\n")
+        test_pred = rf.predict(test_embed)
+        test['prediction'] = test_pred
+        submission = test[['id','prediction']]
+        submission.to_csv('sub_rf.csv', index=False)
 
-print("SVC training started\n")
-#---Sentence embeddings----
-svc = svm.SVC(kernel='linear', C=1, probability=True, max_iter=5000, verbose=1).fit(xtrain_sent, ytrain)
+    else:
+        print("Bernoulli training started\n")
+        BNBmodel = BernoulliNB(alpha=2)
+        BNBmodel.fit(xtrain, ytrain)
+        lr_accuracy = model_Evaluate(BNBmodel)
+        accuracies.append((model_type, lr_accuracy))
+        print("LR prediction started\n")
+        df = predict(BNBmodel)
+        create_predictions_csv(df)
 
-prediction = svc.predict_proba(xvalid_sent)
-prediction_int = prediction[:,1] >= 0.3
-prediction_int = prediction_int.astype(np.int64)
-svc_sent_accuracy = accuracy_score(yvalid, prediction_int)
-accuracies.append(svc_sent_accuracy)
-
-test_pred = svc.predict_proba(test_sent)
-test_pred_int = test_pred[:,1] >= 0.3
-test_pred_int = test_pred_int.astype(np.int64)
-test['label'] = test_pred_int
-submission = test[['id','label']]
-submission.to_csv('sub_svc_sent.csv', index=False)
-
-#---Bag of words----
-svc = svm.SVC(kernel='linear', C=1, probability=True, max_iter=5000, verbose=1).fit(xtrain_bow, ytrain)
-
-prediction = svc.predict_proba(xvalid_bow)
-prediction_int = prediction[:,1] >= 0.3
-prediction_int = prediction_int.astype(np.int64)
-svc_bow_accuracy = accuracy_score(yvalid, prediction_int)
-accuracies.append(svc_bow_accuracy)
-
-test_pred = svc.predict_proba(test_bow)
-test_pred_int = test_pred[:,1] >= 0.3
-test_pred_int = test_pred_int.astype(np.int64)
-test['label'] = test_pred_int
-submission = test[['id','label']]
-submission.to_csv('sub_svc_bow.csv', index=False)
-
-#---TFIDF----
-svc = svm.SVC(kernel='linear', C=1, probability=True, max_iter=5000, verbose=1).fit(xtrain_tfidf, ytrain)
-
-prediction = svc.predict_proba(xvalid_tfidf)
-prediction_int = prediction[:,1] >= 0.3
-prediction_int = prediction_int.astype(np.int64)
-svc_tfidf_accuracy = accuracy_score(yvalid, prediction_int)
-accuracies.append(svc_tfidf_accuracy)
-
-test_pred = svc.predict_proba(test_tfidf)
-test_pred_int = test_pred[:,1] >= 0.3
-test_pred_int = test_pred_int.astype(np.int64)
-test['label'] = test_pred_int
-submission = test[['id','label']]
-submission.to_csv('sub_svc_tfidf.csv', index=False)
-
-#---Word2Vec----
-svc = svm.SVC(kernel='linear', C=1, probability=True, max_iter=5000, verbose=1).fit(xtrain_w2v, ytrain)
-
-prediction = svc.predict_proba(xvalid_w2v)
-prediction_int = prediction[:,1] >= 0.3
-prediction_int = prediction_int.astype(np.int64)
-svc_w2v_accuracy = accuracy_score(yvalid, prediction_int)
-accuracies.append(svc_w2v_accuracy)
-
-test_pred = svc.predict_proba(test_w2v)
-test_pred_int = test_pred[:,1] >= 0.3
-test_pred_int = test_pred_int.astype(np.int64)
-test['label'] = test_pred_int
-submission = test[['id','label']]
-submission.to_csv('sub_svc_w2v.csv', index=False)
-
-
-# **RANDOM FOREST**
-
-print("RF training started\n")
-#---Sentence embeddings----
-rf = RandomForestClassifier(n_estimators=400, random_state=11, max_depth=100).fit(xtrain_sent, ytrain)
-
-prediction = rf.predict(xvalid_sent)
-rf_sent_accuracy = accuracy_score(yvalid, prediction)
-accuracies.append(rf_sent_accuracy)
-
-print("RF prediction started\n")
-test_pred = rf.predict(test_sent)
-test['prediction'] = test_pred
-submission = test[['id','prediction']]
-submission.to_csv('sub_rf_sent.csv', index=False)
-
-#---Bag of Words----
-rf = RandomForestClassifier(n_estimators=400, random_state=11, max_depth=10).fit(xtrain_bow, ytrain)
-
-prediction = rf.predict(xvalid_bow)
-rf_bow_accuracy = accuracy_score(yvalid, prediction)
-accuracies.append(rf_bow_accuracy)
-
-test_pred = rf.predict(test_bow)
-test['prediction'] = test_pred
-submission = test[['id','prediction']]
-submission.to_csv('sub_rf_bow.csv', index=False)
-
-#---TFIDF----
-rf = RandomForestClassifier(n_estimators=400, random_state=11).fit(xtrain_tfidf, ytrain)
-
-prediction = rf.predict(xvalid_tfidf)
-rf_tfidf_accuracy = accuracy_score(yvalid, prediction)
-accuracies.append(rf_tfidf_accuracy)
-
-test_pred = rf.predict(test_tfidf)
-test['prediction'] = test_pred
-submission = test[['id','prediction']]
-submission.to_csv('sub_rf_tfidf.csv', index=False)
-
-#---Word2Vec----
-rf = RandomForestClassifier(n_estimators=400, random_state=11, max_depth=1).fit(xtrain_w2v, ytrain)
-
-prediction = rf.predict(xvalid_w2v)
-rf_w2v_accuracy = accuracy_score(yvalid, prediction)
-accuracies.append(rf_w2v_accuracy)
-
-test_pred = rf.predict(test_w2v)
-test['prediction'] = test_pred
-submission = test[['id','prediction']]
-submission.to_csv('sub_rf_w2v.csv', index=False)
-
+model_training_and_prediction(model_type)
 #Saves all the eval accuracies in both the approaches to a txt file in the order that they were executed
 with open("eval_accuracies.txt", "w") as file:
     for acc in accuracies:
