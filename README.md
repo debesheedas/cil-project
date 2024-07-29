@@ -21,18 +21,58 @@ Create a virtual environment if you desire, and then run the following command i
 Run the analysis.ipynb file to see a vizualization of the dataset and get an idea about the distribution of hashtags, emoticons, etc.
 
 ## Preprocessing
-TODO
 
-The neg-pos.py file consists of all the preprocessing discussed in the paper. Apart from the default settings, other options can be enabled using the flags. For example, if you want to replace the abbreviations with their full forms, you only need to set the ABBREV flag to True and then generate the preprocessed dataset. The paths to the preprocessed dataset and test data are already added to the config file. segmentHashtags.py is a separate file that is used to break up the words in a hashtag to take that sentiment into account.
+The neg-pos.py file consists of all the preprocessing discussed in the paper. Apart from the default settings, other options can be enabled using the flags. Following is the list of flag names that you can add in the 'preproc' list in the config. Please copy-paste the exact string in the code to avoid any breakage. The paths to the original training data, the new preprocessed dataset and test data should be added to the config as shown in the snippet below.
 
+Flag names:
+- HASHTAG_SEGM
+- USR
+- ABBREV
+- EMOJI
+- STEM
 
+```
+    "preproc":["ADD LIST OF PREPROCESSING FLAGS"],
+    "neg_prep_path": <PATH TO NEGATIVE TRAINING SET>,
+    "pos_prep_path": <PATH TO POSITIVE TRAINING SET>,
+    "test_prep_path": <PATH TO TEST SET>",
+    "neg_training_path": <PATH TO SAVE THE NEW PREPROCESSED NEGATIVE TRAINING SET>
+    "pos_training_path": <PATH TO SAVE THE NEW PREPROCESSED POSITIVE TRAINING SET>
+    "test_path": <PATH TO SAVE THE PREPROCESSED TEST SET>
+```
+After modifying the config, make sure to navigate into the [``./src/2-Preprocessing``](./src/2-Preprocessing) folder before running the following command to train the model and generate predictions.
+
+```python3 neg-pos.py```
 
 ## Baselines
 
 ### Classical ML Methods:
-TODO
 
-We begin this project by trying out the classical algorithms such as SVC, Logistic Regression, Bernoulli and Random Forest. Different types of embeddings are used such as Bag of Words, TF-IDF, Word2Vec and Sentence Embeddings. classical.py has all the models and respective training snippets using all types of embeddings. All other models can be commented out apart from the desired model and embedding type. The accuracies are appended to a txt file and the predictions are saved to a csv file. Moreover, for large datasets (with 1M tweets) batch processing is also included.
+We begin this project by trying out the classical algorithms such as SVC, Logistic Regression, Bernoulli and Random Forest. Different types of embeddings are used such as Bag of Words, TF-IDF, Word2Vec and Sentence Embeddings. classical.py has all the models and respective training snippets. In order to choose a specific embedding type and model, you can edit the following parameteres in config. You will also have to specify the paths to the training and test sets as shown below in the config. We use a flag-based logic to enable an embedding and model of choice. Pleaes copy-paste the exact string provided in the list below to avoid any failures in the code. The accuracies are appended to a txt file and the predictions are saved to a csv file.
+
+Embedding types:
+- SentenceTransformer
+- Bow
+- Tfidf
+- W2v
+
+Model names:
+- LinearSVC
+- svm_SVC
+- LR
+- RF
+- BNB
+
+```
+    "embedding_type": "<EMBEDDING NAME>",
+    "model_type": <MODEL NAME>,
+    "neg_training_path": <PATH TO NEGATIVE TRAINING SET>
+    "pos_training_path": <PATH TO POSITIVE TRAINING SET>
+    "test_path": <PATH TO TEST SET>
+```
+After modifying the config, make sure to navigate into the [``./src/1-Classical_Methods``](./src/1-Classical_Methods) folder before running the following command to train the model and generate predictions.
+
+```python3 classical.py```
 
 ### Deep Learning Based - BERTweet:
 
@@ -96,7 +136,7 @@ We provide an ensembling script in [ensemble.py](./src/4-Ensemble/ensemble.py) t
 To achieve the best score, load the probabilities.csv of all the models into the config (you have to change the paths to match your folder structure).
 
 Example config for the best performing ensemble which consisted of the following models:
-1. Fine-tuned BERTweet without pro-processing
+1. Fine-tuned BERTweet without pre-processing
 2. Fine-tuned BERTweet with best pre-processing (Basic + emoticon pre-processing)
 3. BERTweetConvFusionNet with `2dCNN_biLSTM` configuration
 4. BERTweetConvFusionNet with `2dCNN_biLSTM_Attn` configuration
