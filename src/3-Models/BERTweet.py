@@ -11,7 +11,7 @@ from scipy.special import softmax
 
 #define functions 
 def setup_environment(config_path): 
-    f = open('../config.json')
+    f = open(config_path)
     config = json.load(f)
     bert_model_name = config["bert_model_name"]
     logger.info(f'Using model {bert_model_name}')
