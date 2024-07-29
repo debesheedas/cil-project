@@ -1,4 +1,4 @@
-# Text Classification 2024
+# BERTweetConvFusionNet: Enhancing BERTweet for Twitter Text Sentiment Classification
 
 ## Computational Intelligence Laboratory Project 
 
