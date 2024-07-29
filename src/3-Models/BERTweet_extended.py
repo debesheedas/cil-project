@@ -29,7 +29,7 @@ class BERT_CNN_LSTM(nn.Module):
             bert_output = self.bert(input_ids=input_ids, attention_mask=attention_mask)
         bert_output = bert_output.last_hidden_state.permute(0, 2, 1)  
         cnn_output = self.cnn(bert_output).permute(0, 2, 1)  
-        lstm_output, _ = self.lstm(bert_output)
+        lstm_output, _ = self.lstm(cnn_output)
         final_output = lstm_output[:, -1, :] 
         logits = self.classifier(final_output)
         return logits
