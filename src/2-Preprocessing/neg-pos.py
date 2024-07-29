@@ -5,12 +5,26 @@ from segmentHashtags import *
 from nltk.stem import PorterStemmer
 
 stemmer = PorterStemmer()
+f = open('../config.json')
+config = json.load(f)
 
-HASHTAG_SEGM=True
+HASHTAG_SEGM=False
 USR=False
 ABBREV=False
 EMOJI=True
 STEM = False
+
+prepoc_list = config["preproc"]
+if "HASHTAG_SEGM" in prepoc_list:
+    HASHTAG_SEGM=True
+if "USR" in prepoc_list:
+    USR=True
+if "ABBREV" in prepoc_list:
+    ABBREV=True
+if "EMOJI" in prepoc_list:
+    EMOJI=True
+if "STEM" in prepoc_list:
+    STEM=True
 
 emojis = {':)': 'smile', ':-)': 'smile', ';d': 'wink', ':-E': 'vampire', ':(': 'sad', 
           ':-(': 'sad', ':-<': 'sad', ':P': 'silly', ':O': 'surprised',
@@ -92,10 +106,6 @@ def replace_tags(filename_old, filename_new):
     write_tweets(filename_new, modified_tweets)
     print(f"Tags replaced and tweets cleaned in {filename_new}")
 
-
-f = open('../config.json')
-config = json.load(f)
-
 # set file paths
 positive_tweets_file = config["pos_prep_path"]
 negative_tweets_file = config["neg_prep_path"]
@@ -109,5 +119,4 @@ find_and_remove_common_tweets(positive_tweets_file, negative_tweets_file, pos_un
 # Replace tags in the unique tweets files
 replace_tags(pos_unique_file, pos_unique_file)
 replace_tags(neg_unique_file, neg_unique_file)
-replace_tags(test_file, config["test_path"])
 replace_tags(test_file, config["test_path"])
