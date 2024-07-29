@@ -14,7 +14,7 @@ Throughout our systematic and research oriented approach, we tried out various p
 
 Create a virtual environment if you desire, and then run the following command in the home directory to install all the required packages. There are two parts in this file - one set of packages for the classical method code and the other set of packages for the deep learning approach. 
 
-```pip install -r requirements.txt```
+```pip install -r packages.txt```
 
 ## Data Analysis
 
