@@ -5,7 +5,7 @@ import json
 # Takes two or more prediction files (probability of positive class) and produces an ensembled final prediction
 
 # Load configuration from config.json
-config_path = 'config.json'
+config_path = '../config.json'
 with open(config_path, 'r') as file:
     config = json.load(file)
 
