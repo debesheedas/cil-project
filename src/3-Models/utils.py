@@ -10,17 +10,14 @@ def compute_metrics(pred):
 
 def read_datasets(config):
     # Adding labels to the data
-    # neg_dataset = load_dataset("text", data_files=r'/home/debdas/cil/cil-project/data/train_neg.txt', split='train')
     neg_dataset = load_dataset("text", data_files=config["neg_training_path"], split='train')
     label_column = [0] * len(neg_dataset)
     neg_dataset = neg_dataset.add_column("label", label_column)
 
-    # pos_dataset = load_dataset("text", data_files=r'/home/debdas/cil/cil-project/data/train_pos.txt', split='train')
     pos_dataset = load_dataset("text", data_files=config["pos_training_path"], split='train')
     label_column = [1] * len(pos_dataset)
     pos_dataset = pos_dataset.add_column("label", label_column)
-
-    # test_dataset = load_dataset("text", data_files=r'/home/debdas/cil/cil-project/data/test_data.txt', split='train')
+    
     test_dataset = load_dataset("text", data_files=config["test_path"], split='train')
 
     dataset = concatenate_datasets([neg_dataset, pos_dataset])

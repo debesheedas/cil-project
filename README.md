@@ -2,6 +2,17 @@
 
 ## Computational Intelligence Laboratory Project 
 
+We propose a novel deep-learning based solution for Twitter
+sentiment analysis that addresses the challenges of automatic
+and noisily labelled data. Leveraging the pre-trained BERTweet
+model [[1]](#1) for embeddings, we develop a novel CRNN-based ‘fusion
+net’ architecture combining CNN, RNN, and Attention layers.
+Through a systematic exploration of various neural network,
+pre-processing, and ensembling configurations, our approach
+achieves an accuracy of 92.12% on the public leaderboard. Details of our approach and results can be found in our [Report](./Enhancing_BERTweet_for_Twitter_Sentiment_Classification.pdf).
+
+## Implementation
+
 Our text classification pipeline is broken into the following segments for modularity:
 1. Data Analysis and Vizualization
 2. Data Preprocessing
@@ -12,24 +23,26 @@ Throughout our systematic and research oriented approach, we tried out various p
 
 ## Setup Instructions
 
-Create a virtual environment if you desire, and then run the following command in the home directory to install all the required packages. There are two parts in this file - one set of packages for the classical method code and the other set of packages for the deep learning approach. 
+Create a virtual environment if you desire, and then run the following command in the home directory to install all the required packages. 
 
-```pip install -r packages.txt```
+```pip install -r requirements.txt```
 
 ## Data Analysis
 
-Run the analysis.ipynb file to see a vizualization of the dataset and get an idea about the distribution of hashtags, emoticons, etc.
+Run the [analysis.ipynb](./src/1-Classical_Methods/analysis.ipynb) notebook to see a vizualization of the dataset and get insights about the distribution of hashtags, emoticons, etc.
 
 ## Preprocessing
 
-The neg-pos.py file consists of all the preprocessing discussed in the paper. Apart from the default settings, other options can be enabled using the flags. Following is the list of flag names that you can add in the 'preproc' list in the config. Please copy-paste the exact string in the code to avoid any breakage. The paths to the original training data, the new preprocessed dataset and test data should be added to the config as shown in the snippet below.
+The [neg-pos.py](./src/2-Preprocessing/neg-pos.py) file consists of all the preprocessing discussed in the paper. In addition to the basic pre-processing settings, other options can be enabled using the flags. Following is the list of flag names that you can add in the ``preproc`` list in the config. Please copy-paste the exact string in the code to prevent typos. The paths to the original training data, the new preprocessed dataset and test data should be added to the config as shown in the snippet below.
 
 Flag names:
+```
 - HASHTAG_SEGM
 - USR
 - ABBREV
 - EMOJI
 - STEM
+```
 
 ```
     "preproc":["ADD LIST OF PREPROCESSING FLAGS"],
@@ -40,7 +53,7 @@ Flag names:
     "pos_training_path": <PATH TO SAVE THE NEW PREPROCESSED POSITIVE TRAINING SET>
     "test_path": <PATH TO SAVE THE PREPROCESSED TEST SET>
 ```
-After modifying the config, make sure to navigate into the [``./src/2-Preprocessing``](./src/2-Preprocessing) folder before running the following command to train the model and generate predictions.
+After modifying the config, make sure to navigate into the [``./src/2-Preprocessing``](./src/2-Preprocessing) folder before running the following command to generate the pre-trained dataset.
 
 ```python3 neg-pos.py```
 
@@ -48,20 +61,23 @@ After modifying the config, make sure to navigate into the [``./src/2-Preprocess
 
 ### Classical ML Methods:
 
-We begin this project by trying out the classical algorithms such as SVC, Logistic Regression, Bernoulli and Random Forest. Different types of embeddings are used such as Bag of Words, TF-IDF, Word2Vec and Sentence Embeddings. classical.py has all the models and respective training snippets. In order to choose a specific embedding type and model, you can edit the following parameteres in config. You will also have to specify the paths to the training and test sets as shown below in the config. We use a flag-based logic to enable an embedding and model of choice. Pleaes copy-paste the exact string provided in the list below to avoid any failures in the code. The accuracies are appended to a txt file and the predictions are saved to a csv file.
+We begin this project by trying out the classical algorithms such as SVC, Logistic Regression, Bernoulli and Random Forest. Different types of embeddings are used such as Bag of Words, TF-IDF, Word2Vec and Sentence Embeddings. [classical.py](./src/1-Classical_Methods/classical.py) contains all the models and respective training snippets. In order to choose a specific embedding type and model, you can edit the ``embedding_type`` and ``model_type`` parameteres respectively in config. You will also have to specify the paths to the training and test sets as shown below in the config. We use a flag-based logic to enable an embedding and model of choice. Pleaes copy-paste the exact string provided in the list below to avoid any failures in the code. The accuracies are appended to a txt file and the predictions are saved to a csv file.
 
-Embedding types:
+```
+embedding_type:
 - SentenceTransformer
 - Bow
 - Tfidf
 - W2v
-
-Model names:
+```
+```
+model_type:
 - LinearSVC
 - svm_SVC
 - LR
 - RF
 - BNB
+```
 
 ```
     "embedding_type": "<EMBEDDING NAME>",
@@ -132,6 +148,11 @@ We provide an ensembling script in [ensemble.py](./src/4-Ensemble/ensemble.py) t
     ...
 ]
 ```
+After modifying the config, make sure to navigate into the [``./src/4-Ensemble``](./src/4-Ensemble) folder before running the following command to generate the final ensembled predictions.
+
+```python3 ensemble.py```
+
+
 ### Reproducing the best classification accuracy
 To achieve the best score, load the probabilities.csv of all the models into the config (you have to change the paths to match your folder structure).
 
